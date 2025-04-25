@@ -1,0 +1,132 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 13px;
+            color: #2c3e50;
+            padding: 30px;
+            background-color: #fefefe;
+        }
+
+        h2 {
+            text-align: center;
+            color: #154360;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 15px 20px;
+            background-color: #f4f9fb;
+            border-left: 4px solid #5dade2;
+        }
+
+        .section h4 {
+            margin-top: 0;
+            color: #1a5276;
+        }
+
+        p {
+            margin: 6px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            border: 1px solid #d4e6f1;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #d6eaf8;
+            color: #154360;
+        }
+
+        td {
+            background-color: #ffffff;
+        }
+
+        .image-section {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .image-section img {
+            max-width: 250px;
+            border: 2px solid #aab7b8;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .highlight {
+            color: #117864;
+            font-weight: bold;
+        }
+
+        .note, .how-it-works {
+            font-size: 12px;
+            color: #555;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <h2>Blood Group Classification Report</h2>
+
+    <div class="section">
+        <p><strong>Input File:</strong> {{ filename }}</p>
+        <p><strong>Predicted Blood Group:</strong> <span class="highlight">{{ predicted }}</span></p>
+    </div>
+
+    {% if image_data %}
+    <div class="section">
+        <h4>Uploaded Fingerprint</h4>
+        <div class="image-section">
+            <img src="{{ image_data }}">
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="section">
+        <h4>Confidence Scores</h4>
+        <table>
+            <tr>
+                <th>Blood Group</th>
+                <th>Confidence (%)</th>
+            </tr>
+            {% for label, prob in zipped %}
+            <tr>
+                <td>{{ label }}</td>
+                <td>{{ prob|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="section">
+        <h4>How This Works</h4>
+        <p class="how-it-works">
+            This prediction system uses fingerprint images to determine your blood group using advanced <strong>deep learning</strong> models. 
+            Patterns in fingerprints—such as <strong>ridges</strong>, <strong>loops</strong>, and <strong>whorls</strong>—exhibit statistical correlations with blood group types.
+        </p>
+        <p class="how-it-works">
+            Three powerful <strong>Convolutional Neural Networks (CNNs)</strong>—ResNet50, EfficientNetB0, and DenseNet121—extract unique features from the fingerprint image. 
+            These are combined using a <strong>stacked XGBoost classifier</strong> to make the final prediction.
+        </p>
+        <p class="how-it-works">
+            This approach is <strong>non-invasive</strong>, <strong>instant</strong>, and can avoid the need for physical blood tests in many emergency or remote healthcare settings.
+        </p>
+    </div>
+
+    <p class="note"><strong>Note:</strong> The prediction is based on the stacked outputs of three CNNs followed by an XGBoost ensemble classifier. Results are probabilistic.</p>
+</body>
+</html>
