@@ -7,7 +7,6 @@ from PIL import Image
 from django.views import View
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from django.core.files.storage import FileSystemStorage
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from torchvision import transforms
@@ -16,6 +15,8 @@ import joblib
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(BASE_DIR, 'predictor', 'models')
+DOCUMENTS_DIR = "C:/Users/Siddhartha/Documents"
+FINGERPRINT_IMAGE = os.path.join(DOCUMENTS_DIR, "fingerprint.bmp")
 LABELS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -113,29 +114,30 @@ class HomeView(View):
 class PredictView(View):
     def post(self, request):
         context = {}
-        if request.FILES.get('image'):
-            img = request.FILES['image']
-            fs = FileSystemStorage()
-            img_path = fs.save(img.name, img)
-            full_path = fs.path(img_path)
 
+        # ✅ Automatically load fingerprint.bmp from Documents
+        if os.path.exists(FINGERPRINT_IMAGE):
             pipeline = PredictionPipeline()
-            label, probs = pipeline.run(full_path)
+            label, probs = pipeline.run(FINGERPRINT_IMAGE)
 
-            with open(full_path, "rb") as f:
+            # Read the image for display
+            with open(FINGERPRINT_IMAGE, "rb") as f:
                 encoded = base64.b64encode(f.read()).decode('utf-8')
-            mime = "image/png" if img.name.lower().endswith("png") else "image/jpeg"
+            mime = "image/bmp"
 
+            # Store prediction in session for PDF download
             request.session["last_prediction"] = {
                 "predicted": label,
                 "probs": probs.tolist(),
-                "filename": img.name,
+                "filename": "fingerprint.bmp",
                 "image_data": f"data:{mime};base64,{encoded}"
             }
 
             context['result'] = label
             context['confidence'] = probs[np.argmax(probs)] * 100
-            context['uploaded'] = img.name
+            context['uploaded'] = "fingerprint.bmp"
+        else:
+            context['error'] = "No fingerprint.bmp found in the Documents folder."
 
         return render(request, 'predictor/index.html', context)
 
